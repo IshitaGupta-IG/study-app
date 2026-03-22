@@ -3,7 +3,7 @@ from config import get_llm
 
 llm = get_llm()
 
-@tool
+@tool #decorator
 def explain_tool(topic: str) -> str:
     """Explain a concept in simple terms for students""" #Docstring
     prompt = f"Explain {topic} in a simple way for a beginner student."
