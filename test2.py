@@ -46,7 +46,7 @@ if __name__ == '__main__':
                     {
                         "role": "system",
                         "content": (
-                            "Explain organic chemistry in simple terms, "
+                            "Explain pythagoras theorem in simple terms, "
                             "then give a short quiz (3 questions max), "
                         ),
                     },
