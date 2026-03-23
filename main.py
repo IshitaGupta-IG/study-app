@@ -2,10 +2,11 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from agent import create_agent
 from db import save_interaction
+from tools import *
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Initialize agent once
 agent = create_agent()
 
 class Query(BaseModel):
@@ -18,23 +19,46 @@ def home():
 
 @app.post("/study")
 async def study(query: Query):
+    # -----------------------
+    # Prepare messages for the agent
+    # -----------------------
     messages = [{"role": "user", "content": query.question}]
 
-    # Invoke agent
-    result = agent.invoke(
-        {"messages": messages},
-        verbose=True,
-        max_iterations=3
-    )
+    try:
+        result = agent.invoke({
+            "messages": messages,
+            "agent_scratchpad": []      # 👈 scratch pad for intermediate reasoning
+        })
 
-    result_text = getattr(result, "content", str(result))
+        print("RAW RESULT:", result)
 
-    # Save to DynamoDB
-    save_interaction(
-        query.user_id,
-        query.question,
-        result_text
-    )
+        # Extract text safely
+        response = result.get("output", str(result))
 
-    # Return plain string
-    return {"response": result_text}
+    except Exception as e:
+        print("Agent failed ❌", e)
+
+        # Fallback tools
+        explanation = explain_tool.invoke(query.question)
+        quiz = quiz_tool.invoke(query.question)
+
+        response = f"{explanation}\n\n{quiz}"
+
+    # Save interaction
+    try:
+        save_interaction(query.user_id, query.question, response)
+    except Exception as db_err:
+        print("Failed to save to DB ❌", db_err)
+
+    return {"response": response}
+
+app = FastAPI()
+
+# ✅ ADD THIS BLOCK
+app.add_middleware(
+   CORSMiddleware,
+   allow_origins=["*"],   # allow all (dev only)
+   allow_credentials=True,
+   allow_methods=["*"],
+   allow_headers=["*"],
+)
