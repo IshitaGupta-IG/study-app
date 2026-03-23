@@ -28,7 +28,7 @@ if __name__ == '__main__':
     # ---------------- AGENT TEST ----------------
     print("\n--- AGENT TEST ---")
     agent = create_agent()
-    question_2 = "Explain Photosynthesis and then give me a quiz"
+    question_2 = "Explain Organic chemistry and then give me a quiz"
 
     # Initialize final output
     final_output = "PROCESSING..."
@@ -46,13 +46,17 @@ if __name__ == '__main__':
                     {
                         "role": "system",
                         "content": (
-                            "Explain photosythesis in simple terms, "
+                            "Explain organic chemistry in simple terms, "
                             "then give a short quiz (3 questions max), "
                         ),
                     },
                     {"role": "user", "content": question_2},
                 ]
-            }
+            },
+            verbose=True,
+            max_iterations=3,
+            agent="zero-shot-react-description",
+            early_stopping_method="generate"
         )
 
         print("\nRAW RESULT:")
